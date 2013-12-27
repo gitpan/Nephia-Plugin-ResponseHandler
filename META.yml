@@ -27,7 +27,7 @@ no_index:
 provides:
   Nephia::Plugin::ResponseHandler:
     file: lib/Nephia/Plugin/ResponseHandler.pm
-    version: 0.01
+    version: 0.02
 requires:
   Nephia: 0.80
   Nephia::Plugin::JSON: 0
@@ -37,4 +37,4 @@ resources:
   bugtracker: https://github.com/nephia/Nephia-Plugin-ResponseHandler/issues
   homepage: https://github.com/nephia/Nephia-Plugin-ResponseHandler
   repository: git://github.com/nephia/Nephia-Plugin-ResponseHandler
-version: 0.01
+version: 0.02

@@ -5,7 +5,7 @@ use warnings;
 use parent 'Nephia::Plugin';
 use Nephia::Response;
 
-our $VERSION = "0.01";
+our $VERSION = "0.02";
 
 sub new {
     my ($class, %opts) = @_;
@@ -32,10 +32,20 @@ sub _response_handler {
 sub _hash_handler {
     my ($app, $context) = @_;
     my $res = $context->get('res');
-    $res->{template} ?
-        $context->set('res' => Nephia::Response->new(200, ['Content-Type' => 'text/html; charset=UTF-8'], $app->dsl('render')->(delete($res->{template}), $res)) ) :
-        $app->dsl('json_res')->($res)
-    ;
+    if ($res->{template}) {
+        my $template = delete($res->{template});
+        my $content_type = delete($res->{content_type}) || 'text/html; charset=UTF-8';
+        my $res_obj = Nephia::Response->new(
+            200, 
+            ['Content-Type' => $content_type], 
+            $app->dsl('render')->($template, $res)
+        ); 
+        $context->set('res' => $res_obj);
+        return $res_obj;
+    }
+    else {
+        return $app->dsl('json_res')->($res)
+    }
 }
 
 sub _array_handler {
@@ -47,7 +57,7 @@ sub _array_handler {
 sub _scalar_handler {
     my ($app, $context) = @_;
     my $res = $context->get('res');
-    $context->set('res' => Nephia::Response->new(200, [], $res));
+    $context->set('res' => Nephia::Response->new(200, ['Content-Type' => 'text/html; charset=UTF-8'], $res));
 }
 
 1;
@@ -71,8 +81,9 @@ Nephia::Plugin::ResponseHandler - A plugin for Nephia that provides response-han
         my $type = param('type');
         $type eq 'json' ? +{foo => 'bar'} :
         $type eq 'html' ? +{foo => 'bar', template => 'index.html'} :
+        $type eq 'js'   ? +{foo => 'bar', template => 'hoge.js', content_type => 'text/javascript'} :
         $type eq 'str'  ? 'foo = bar' :
-                          [200, [], 'foo = bar'] 
+                          [200, ['Content-Type' => 'text/html'], 'foo = bar'] 
         ;
     };
     
@@ -101,6 +112,24 @@ Nephia::Plugin::ResponseHandler - A plugin for Nephia that provides response-han
 =head1 DESCRIPTION
 
 Nephia::Plugin::ResponseHandler provides response-handling feature for Nephia app.
+
+=head1 DEFAULT WORKS
+
+=head2 When hashref passed
+
+Basically, content-type becomes 'application/json; charset=UTF-8', and content-body becomes json-string that is transformed from passed hashref.
+
+If 'template' attribute contains in hashref, content-type becomes 'text/html; charset=UTF-8', and content-body becomes string that is rendered with view plugin. (ex. Nephia::Plugin::View::MicroTemplate, Nephia::Plugin::View::Xslate, or other)
+
+If 'template' and 'content_type' contains in hashref, content-type becomes specified thing as 'content_type' in hashref, and content-body becomes string that is rendered by view plugin.
+
+=head2 When arrayref passed
+
+It expects three elements into arrayref, as response of PSGI.
+
+=head2 When scalar passed
+
+Content-type becomes "text/html; charset=UTF-8", and content-body becomes passed scalar.
 
 =head1 LICENSE
 

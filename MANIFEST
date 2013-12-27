@@ -7,6 +7,7 @@ cpanfile
 lib/Nephia/Plugin/ResponseHandler.pm
 t/00_compile.t
 t/01_basic.t
+t/tmpl/bar.js
 t/tmpl/foo.html
 META.yml
 MANIFEST
